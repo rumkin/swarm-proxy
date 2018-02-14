@@ -1,0 +1,16 @@
+[Unit]
+Description=Swarm Proxy Service
+After=network.target
+
+[Service]
+User=swarm-proxy
+Group=swarm-proxy
+WorkingDirectory=/var/www/swarm-proxy
+Type=simple
+
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

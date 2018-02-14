@@ -14,8 +14,8 @@ const BZZ_GATEWAY = 'http://swarm-gateways.net';
 const getBzzRecord = dnsBzzResolver(['8.8.8.8']);
 const fetchBzzStruct = bzzStructureFetcher(BZZ_GATEWAY);
 const fetchBzzEntry = bzzEntryFetcher(BZZ_GATEWAY);
-const cache = cacheFactory(new FsStore({dir: 'cache'}));
-const store = new FsStore({dir: 'files'});
+const store = new FsStore({dir: '/tmp/swarm-proxy'});
+const cache = cacheFactory(store);
 
 const plant = new Plant();
 
