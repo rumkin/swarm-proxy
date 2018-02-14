@@ -20,7 +20,7 @@ const store = new FsStore({dir: 'files'});
 const plant = new Plant();
 
 plant.use(async ({req, res}) => {
-    const bzz = await getBzzRecord('cryptodoc.org');
+    const bzz = await getBzzRecord(req.host);
 
     let files;
     const cached = await cache.get(bzz);
@@ -77,7 +77,7 @@ plant.use(async ({req, res}) => {
 
 const server = http.createServer(plant.handler());
 
-server.listen(8080, 'localhost', () => {
+server.listen(8080, '0.0.0.0', () => {
     console.log('Server started');
 });
 
