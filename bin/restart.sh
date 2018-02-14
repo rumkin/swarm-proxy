@@ -12,5 +12,6 @@ then
 fi
 
 chgrp swarm-proxy $TMP
+chmod g+w $TMP
 
 systemctl --user restart swarm-proxy.service
