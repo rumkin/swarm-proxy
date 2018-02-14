@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "@plant/plant": "^0.7.0",
+    "accept": "^3.0.2",
+    "axios": "^0.17.1",
+    "bluebird": "^3.5.1",
+    "error3": "^1.6.0",
+    "mime": "^2.2.0"
+  },
+  "devDependencies": {
+    "flightplan": "^0.6.17"
+  },
+  "scripts": {
+    "fly": "fly"
+  }
+}
