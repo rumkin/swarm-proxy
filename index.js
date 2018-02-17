@@ -1,14 +1,23 @@
+const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const mime = require('mime');
 const Plant = require('@plant/plant');
 const accept = require('accept');
+const isIp = require('is-ip');
 
 const dnsBzzResolver = require('./lib/dns');
 const {bzzStructureFetcher, bzzEntryFetcher} = require('./lib/bzz');
 const cacheFactory = require('./lib/cache');
 const FsStore = require('./lib/store');
 
+process.on('uncaughtException', (error) => {
+    console.error(error);
+    process.exit(1);
+});
+
+const HOST = process.env.HOST || '0.0.0.0';
+const PORT = process.env.PORT || '8080';
 const BZZ_GATEWAY = 'http://swarm-gateways.net';
 
 const getBzzRecord = dnsBzzResolver(['8.8.8.8']);
@@ -20,6 +29,12 @@ const cache = cacheFactory(store);
 const plant = new Plant();
 
 plant.use(async ({req, res}) => {
+    const {host} = req;
+
+    if (host === 'localhost' || isIp(host)) {
+        return;
+    }
+
     const bzz = await getBzzRecord(req.host);
 
     let files;
@@ -77,8 +92,8 @@ plant.use(async ({req, res}) => {
 
 const server = http.createServer(plant.handler());
 
-server.listen(8080, '0.0.0.0', () => {
-    console.log('Server started');
+server.listen(PORT, HOST, () => {
+    console.log('Server started at %s: %s', HOST, PORT);
 });
 
 function findFileWithUrl(files, _url, {indexFile = 'index.html'} = {}) {
