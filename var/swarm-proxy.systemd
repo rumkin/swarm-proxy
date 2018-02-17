@@ -7,11 +7,11 @@ User=swarm-proxy
 Group=swarm-proxy
 WorkingDirectory=/var/www/swarm-proxy
 Type=forking
-PIDFile=proxy.pid
+PIDFile=/var/www/swarm-proxy/proxy.pid
 
 ExecStart=/usr/bin/node cli.js start
 ExecStop=/usr/bin/node cli.js stop
-ExecRestart=/usr/bin/node cli.js restart
+ExecReload=/usr/bin/node cli.js restart
 
 [Install]
 WantedBy=multi-user.target
