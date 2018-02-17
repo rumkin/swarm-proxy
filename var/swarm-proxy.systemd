@@ -12,6 +12,7 @@ PIDFile=/var/www/swarm-proxy/proxy.pid
 ExecStart=/usr/bin/node cli.js start
 ExecStop=/usr/bin/node cli.js stop
 ExecReload=/usr/bin/node cli.js restart
+ExecStartPre=/bin/bash /bin/before-start.sh
 
 [Install]
 WantedBy=multi-user.target
