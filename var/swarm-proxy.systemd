@@ -12,10 +12,10 @@ Environment=APP=swarm-proxy
 Environment=DIR=/var/www/swarm-proxy
 
 Restart=always
-ExecStart=/usr/bin/node /home/buddy/projects/swarm-proxy/cli.js start
-ExecStop=/usr/bin/node /home/buddy/projects/swarm-proxy/cli.js stop
-ExecReload=/usr/bin/node /home/buddy/projects/swarm-proxy/cli.js reload
-ExecStartPre=/bin/bash /home/buddy/projects/swarm-proxy/bin/before-start.sh
+ExecStart=/usr/bin/node /var/apps/swarm-proxy/cli.js start
+ExecStop=/usr/bin/node /var/apps/swarm-proxy/cli.js stop
+ExecReload=/usr/bin/node /var/apps/swarm-proxy/cli.js reload
+ExecStartPre=/bin/bash /var/apps/swarm-proxy/bin/before-start.sh
 
 [Install]
 WantedBy=multi-user.target
