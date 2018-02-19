@@ -1,7 +1,9 @@
 #!/bin/bash
 
-cp -r * $APPPATH
+set -e
+
+cp -r * "$APPPATH"
 
 cd $DIR
 
-node ${APPPATH}/bin/cli.js reload
+node ${APPPATH}/cli.js reload

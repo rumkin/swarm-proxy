@@ -1,13 +1,19 @@
 #!/bin/bash
 
-APP=swarm-proxy
-APPPATH=/var/apps/$APP
+set -e
 
+# Create app dir
 if [ ! -d "$APPPATH" ]
 then
-    mkdir $APPPATH
+    mkdir "$APPPATH"
+    chgrp -R www "$APPPATH"
 fi
 
-[ ! -d "$DIR" ] && mkdir $DIR
-[ ! -d "$DIR/tmp" ] && mkdir $DIR/tmp
-[ ! -d "$DIR/log" ] && mkdir $DIR/log
+# Create instance dir
+if [ ! -d "$DIR" ]
+then
+    mkdir "$DIR"
+    mkdir "$DIR/tmp"
+    mkdir "$DIR/log"
+    chgrp -R swarm-proxy $DIR
+fi

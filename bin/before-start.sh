@@ -1,15 +1,17 @@
 #!/bin/bash
 
+set -e
+
 TMP=/tmp/$APP
 
 if [ ! -e "$TMP" ]
 then
-    mkdir $TMP
+    mkdir "$TMP"
 elif [ ! -d "$TMP" ]
 then
     rm -rf $TMP
-    mkdir $TMP
+    mkdir "$TMP"
 fi
 
-chgrp $APP $TMP
-chmod g+w $TMP
+chgrp $APP "$TMP"
+chmod g+w "$TMP"
