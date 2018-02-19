@@ -2,6 +2,7 @@ node_modules/
 
 tmp/
 local/
+log/
 
 *.pid
 *.lock
