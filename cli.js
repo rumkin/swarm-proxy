@@ -45,7 +45,7 @@ function start() {
         }
     }
 
-    const child = spawn(process.argv[0], ['./run.js', ...process.argv.slice(3)], {
+    const child = spawn(process.argv[0], [path.join(__dirname, '/run.js'), ...process.argv.slice(3)], {
         env: process.env,
         stdio: [
             'ignore',
