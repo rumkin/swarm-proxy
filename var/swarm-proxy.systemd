@@ -8,6 +8,9 @@ Group=swarm-proxy
 WorkingDirectory=/var/www/swarm-proxy
 Type=forking
 
+Environment=APP=swarm-proxy
+Environment=DIR=/var/www/swarm-proxy
+
 Restart=always
 ExecStart=/usr/bin/node /home/buddy/projects/swarm-proxy/cli.js start
 ExecStop=/usr/bin/node /home/buddy/projects/swarm-proxy/cli.js stop

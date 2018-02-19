@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TMP=/tmp/swarm-proxy
+TMP=/tmp/$APP
 
 if [ ! -e "$TMP" ]
 then
@@ -11,5 +11,5 @@ then
     mkdir $TMP
 fi
 
-chgrp swarm-proxy $TMP
+chgrp $APP $TMP
 chmod g+w $TMP

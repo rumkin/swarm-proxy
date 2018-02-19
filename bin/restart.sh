@@ -1,7 +1,7 @@
 #!/bin/bash
 
-APPPATH=$PWD
+cp -r * $APPPATH
 
-cd /var/www/swarm-proxy
+cd $DIR
 
 node ${APPPATH}/bin/cli.js reload
