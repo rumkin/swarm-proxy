@@ -1,5 +1,7 @@
 #!/bin/bash
 
-APP_PATH=/home/buddy/projects/swarm-proxy
+APPPATH=$PWD
 
-node $APP_PATH/bin/cli.js reload
+cd /var/www/swarm-proxy
+
+node ${APPPATH}/bin/cli.js reload
