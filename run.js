@@ -117,6 +117,7 @@ if (fs.existsSync(SOCKFILE)) {
 
 server.listen(SOCKFILE, () => {
     console.log('Server is listening: %s', path.resolve(SOCKFILE));
+    fs.chmodSync(SOCKFILE, 0770);
 });
 
 fs.writeFileSync(PIDFILE, process.pid);
