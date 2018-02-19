@@ -16,8 +16,13 @@ let timeout;
 let server;
 
 function clean() {
-    fs.unlinkSync(PIDFILE);
-    fs.unlinkSync(SOCKFILE);
+    if (fs.existsSync(PIDFILE)) {
+        fs.unlinkSync(PIDFILE);
+    }
+
+    if (fs.existsSync(SOCKFILE)) {
+        fs.unlinkSync(SOCKFILE);
+    }
 }
 
 function stop(signal) {
@@ -43,7 +48,7 @@ function exit(signal) {
 let log = [];
 
 function run() {
-    subproc = spawn(process.argv[0], ['index.js', process.argv.slice(2)], {
+    subproc = spawn(process.argv[0], [path.join(__dirname, 'index.js'), process.argv.slice(2)], {
         env: process.env,
         stdio: [null, 'pipe', 'pipe'],
     });
