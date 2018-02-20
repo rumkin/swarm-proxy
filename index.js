@@ -30,8 +30,34 @@ const dnsCache = cacheFactory(new Store.Memory({lifetime: 15e3}));
 
 const plant = new Plant();
 
-plant.use(async ({req, res}) => {
-    let {host} = req;
+// Not found page handler
+plant.use(async ({req, res}, next) => {
+    await next();
+
+    if (res.headersSent) {
+        return;
+    }
+
+    res.status(404);
+
+    onType(req, {
+        ['application/json']() {
+            res.json({
+                error: {
+                    code: 'not_found',
+                },
+            });
+        },
+
+        _() {
+            res.send('Nothing found');
+        },
+    });
+});
+
+// Extract BZZ-TXT record from DNS
+plant.use(async ({req, ...ctx}, next) => {
+    const {host} = req;
 
     if (isIp(host) || host === 'localhost') {
         return;
@@ -46,8 +72,15 @@ plant.use(async ({req, res}) => {
         await dnsCache.set(host, bzz);
     }
 
-    let files;
+    if (bzz) {
+        await next({req, bzz, ...ctx});
+    }
+});
+
+// Get site tree from BZZ
+plant.use(async ({bzz, ...ctx}, next) => {
     const cached = await bzzCache.get(bzz);
+    let files;
 
     if (! cached) {
         const entries = await fetchBzzStruct(bzz, {
@@ -61,42 +94,18 @@ plant.use(async ({req, res}) => {
         files = cached;
     }
 
+    await next({files, ...ctx});
+});
+
+// Strict file handler
+plant.use(async ({req, res, files}) => {
     const file = findFileWithUrl(files, req.url);
 
     if (! file) {
-        res.status(404);
-
-        const types = accept.mediaTypes(req.headers.get('accept') || '');
-        onType(types, {
-            ['application/json']() {
-                res.json({
-                    error: {
-                        code: 'not_found',
-                    },
-                });
-            },
-
-            _() {
-                res.send('Nothing found');
-            },
-        });
+        return;
     }
-    else {
-        res.status(200);
-        let content;
 
-        if (await store.has(file.hash)) {
-            content = await store.get(file.hash);
-        }
-        else {
-            content = await fetchBzzEntry(file.hash);
-            store.set(file.hash, content);
-        }
-
-        res.headers.set('content-type', mime.getType(file.path));
-        res.headers.set('content-length', file.size);
-        res.send(content);
-    }
+    await sendFile(res, file);
 });
 
 const server = http.createServer(plant.handler());
@@ -104,6 +113,8 @@ const server = http.createServer(plant.handler());
 server.listen(PORT, HOST, () => {
     console.log('Server started at %s: %s', HOST, PORT);
 });
+
+// Helper methods
 
 function findFileWithUrl(files, _url, {indexFile = 'index.html'} = {}) {
     const url = path.resolve('/', _url).slice(1);
@@ -114,7 +125,22 @@ function findFileWithUrl(files, _url, {indexFile = 'index.html'} = {}) {
     });
 }
 
-function onType(types, _handlers) {
+async function getFileByHash(hash) {
+    if (await store.has(hash)) {
+        return store.get(hash);
+    }
+    else {
+        content = await fetchBzzEntry(hash);
+        // TODO make defer
+        await store.set(hash, content);
+
+        return content;
+    }
+}
+
+function onType(req, _handlers) {
+    const types = accept.mediaTypes(req.headers.get('accept') || '');
+
     const handlers = {};
     for (const [type, fn] of Object.entries(_handlers)) {
         for (const t of type.split(/\s+/)) {
@@ -129,4 +155,13 @@ function onType(types, _handlers) {
     }
 
     return handlers._();
+}
+
+async function sendFile(res, file) {
+    const content = await getFileByHash(file.hash);
+
+    res.status(200);
+    res.headers.set('content-type', mime.getType(file.path));
+    res.headers.set('content-length', file.size);
+    res.send(content);
 }
