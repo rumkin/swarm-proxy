@@ -8,9 +8,9 @@ const Plant = require('@plant/plant');
 const PIDFILE = process.env.PID_FILE || 'proxy.pid';
 const SOCKFILE = process.env.SOCK_FILE || 'run.sock';
 const DELAY = 500;
-const startDate = new Date();
 
 let isStopped = false;
+let startDate;
 let subproc;
 let timeout;
 let server;
@@ -77,6 +77,8 @@ function run() {
             done();
         },
     }));
+
+    startDate = new Date();
 }
 
 function logWrite(chunk) {

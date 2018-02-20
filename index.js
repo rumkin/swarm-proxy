@@ -9,7 +9,7 @@ const isIp = require('is-ip');
 const dnsBzzResolver = require('./lib/dns');
 const {bzzStructureFetcher, bzzEntryFetcher} = require('./lib/bzz');
 const cacheFactory = require('./lib/cache');
-const FsStore = require('./lib/store');
+const Store = require('./lib/store');
 
 process.on('uncaughtException', (error) => {
     console.error(error);
@@ -18,34 +18,43 @@ process.on('uncaughtException', (error) => {
 
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || '8080';
-const BZZ_GATEWAY = 'http://swarm-gateways.net';
+const DNS = process.env.DNS || '8.8.8.8';
+const BZZ = process.env.BZZ || 'http://swarm-gateways.net';
 
-const getBzzRecord = dnsBzzResolver(['8.8.8.8']);
-const fetchBzzStruct = bzzStructureFetcher(BZZ_GATEWAY);
-const fetchBzzEntry = bzzEntryFetcher(BZZ_GATEWAY);
-const store = new FsStore({dir: '/tmp/swarm-proxy'});
-const cache = cacheFactory(store);
+const getBzzRecord = dnsBzzResolver(DNS.split(/\s*,\s*/));
+const fetchBzzStruct = bzzStructureFetcher(BZZ);
+const fetchBzzEntry = bzzEntryFetcher(BZZ);
+const store = new Store.Fs({dir: '/tmp/swarm-proxy'});
+const bzzCache = cacheFactory(store);
+const dnsCache = cacheFactory(new Store.Memory({lifetime: 15e3}));
 
 const plant = new Plant();
 
 plant.use(async ({req, res}) => {
-    const {host} = req;
+    let {host} = req;
 
-    if (host === 'localhost' || isIp(host)) {
+    if (isIp(host) || host === 'localhost') {
         return;
     }
 
-    const bzz = await getBzzRecord(req.host);
+    let bzz;
+    if (await dnsCache.has(host)) {
+        bzz = await dnsCache.get(host);
+    }
+    else {
+        bzz = await getBzzRecord(host);
+        await dnsCache.set(host, bzz);
+    }
 
     let files;
-    const cached = await cache.get(bzz);
+    const cached = await bzzCache.get(bzz);
 
     if (! cached) {
         const entries = await fetchBzzStruct(bzz, {
             timeout: 10e3,
         });
 
-        await cache.set(bzz, entries);
+        await bzzCache.set(bzz, entries);
         files = entries;
     }
     else {
