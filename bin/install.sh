@@ -15,5 +15,5 @@ then
     mkdir "$DIR"
     mkdir "$DIR/tmp"
     mkdir "$DIR/log"
-    chgrp -R swarm-proxy $DIR
+    chown -R swarm-proxy:swarm-proxy $DIR
 fi
