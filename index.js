@@ -163,5 +163,6 @@ async function sendFile(res, file) {
     res.status(200);
     res.headers.set('content-type', mime.getType(file.path));
     res.headers.set('content-length', file.size);
+    res.headers.set('x-bzz-hash', `keccak-256 ${file.hash}`);
     res.send(content);
 }
