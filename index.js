@@ -9,6 +9,7 @@ const isIp = require('is-ip');
 const dnsBzzResolver = require('./lib/dns');
 const {bzzStructureFetcher, bzzEntryFetcher} = require('./lib/bzz');
 const cacheFactory = require('./lib/cache');
+const statFactory = require('./lib/stat');
 const Store = require('./lib/store');
 
 process.on('uncaughtException', (error) => {
@@ -20,6 +21,8 @@ const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || '8080';
 const DNS = process.env.DNS || '8.8.8.8';
 const BZZ = process.env.BZZ || 'http://swarm-gateways.net';
+const API = process.env.API || null;
+const STAT = process.env.STAT || null;
 
 const getBzzRecord = dnsBzzResolver(DNS.split(/\s*,\s*/));
 const fetchBzzStruct = bzzStructureFetcher(BZZ);
@@ -27,6 +30,18 @@ const fetchBzzEntry = bzzEntryFetcher(BZZ);
 const store = new Store.Fs({dir: '/tmp/swarm-proxy'});
 const bzzCache = cacheFactory(store);
 const dnsCache = cacheFactory(new Store.Memory({lifetime: 15e3}));
+const stat = STAT ? statFactory(STAT) : null;
+
+const apiRouter = new Plant.Router();
+
+apiRouter.get('/stat', async ({res}) => {
+    res.json({
+        requests: stat.get('requests'),
+        bytes: stat.get('bytes'),
+    });
+});
+
+const apiHandler = apiRouter.handler();
 
 const plant = new Plant();
 
@@ -53,6 +68,15 @@ plant.use(async ({req, res}, next) => {
             res.send('Nothing found');
         },
     });
+});
+
+plant.use(async({req, ...ctx}, next) => {
+    if (req.host !== API) {
+        await next();
+    }
+    else {
+        await apiHandler({req, ...ctx});
+    }
 });
 
 // Extract BZZ-TXT record from DNS
@@ -96,6 +120,17 @@ plant.use(async ({bzz, ...ctx}, next) => {
 
     await next({files, ...ctx});
 });
+
+if (STAT) { // Write host stat
+    plant.use(async ({res}, next) => {
+        await next();
+
+        if (res.headersSent && res.statusCode === 200) {
+            stat.add('requests', 1);
+            stat.add('bytes', parseInt(res.headers.get('content-length'), 10));
+        }
+    });
+}
 
 // Strict file handler
 plant.use(async ({req, res, files}) => {
