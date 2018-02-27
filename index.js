@@ -174,8 +174,20 @@ if (STAT) { // Write host stat
 }
 
 // Strict file handler
-plant.use(async ({req, res, files}) => {
-    const file = findFileWithUrl(files, req.url);
+plant.use(async ({req, res, swarm, files}) => {
+    let file;
+
+    switch (swarm.type) {
+        case 'spa':
+            file = findFileWithUrl(files, req.url, {indexFile: 'index.html'});
+            if (! file) {
+                file = findFileWithUrl(files, '/index.html');
+            }
+            break;
+        case 'website':
+        default:
+            file = findFileWithUrl(files, req.url, {indexFile: 'index.html'});
+    }
 
     if (! file) {
         return;
@@ -192,9 +204,13 @@ server.listen(PORT, HOST, () => {
 
 // Helper methods
 
-function findFileWithUrl(files, _url, {indexFile = 'index.html'} = {}) {
+function findFileWithUrl(files, _url, {indexFile} = {}) {
     const url = path.resolve('/', _url).slice(1);
-    const search = [url, path.join(url, indexFile)];
+    const search = [url];
+
+    if (indexFile) {
+        search.push(path.join(url, indexFile));
+    }
 
     return files.find((file) => {
         return search.includes(file.path);

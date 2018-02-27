@@ -53,9 +53,9 @@ var/swarm-sites.systemd
 * [ ] Better error pages.
 * [ ] Write tests.
 * [ ] Add Swarm API mockups for test purposes.
-* [ ] Custom sites types:
+* [x] Custom sites types:
     * [x] Website.
-    * [ ] SPA.
+    * [x] SPA.
 
 ## License
 
