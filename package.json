@@ -9,8 +9,6 @@
     "is-running": "^2.1.0",
     "mime": "^2.2.0"
   },
-  "devDependencies": {
-    "flightplan": "^0.6.17"
-  },
+  "devDependencies": {},
   "scripts": {}
 }
