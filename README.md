@@ -1,7 +1,7 @@
 # Swarm Sites
 
-Swarm sites is an http server for serving swarm sites requested via regular DNS
-system by non .eth domains. It works like Github Pages but for Swarm.
+Swarm sites is an http server for serving swarm websites and SPAs requested via
+regular DNS by non .eth domains. It works like Github Pages but for Swarm.
 
 **NOTE!** SwarmSite is in beta.
 
@@ -16,10 +16,15 @@ configuration file or management panel:
     ```
 2. Add `TXT` record to match hostname with BZZ resource:
     ```text
-    @ IN TXT bzz=a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a
+    @ IN TXT swarm=2018:pre bzz=a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a type=website
     ```
 
-When records are updated you can open site with a browser.
+Record description:
+
+* `swarm=2018:pre` – record version `2018:pre`.
+* `bzz=...` - swarm BZZ address
+* `type=website` - _optional_ specifies resource type. Currently `website` is
+default and the only supported value.
 
 ## Install
 
@@ -41,13 +46,16 @@ var/swarm-sites.systemd
 
 ## TODO
 
-* HTTPs support:
-    * Let's Encrypt certificates generation.
-    * Auto renewal.
-* Routing for sites to better support of SPA.
-* Better error pages.
-* Write tests.
-* Add Swarm API mockups for test purposes.
+* [ ] HTTPs support:
+    * [ ] Let's Encrypt certificates generation.
+    * [ ] Auto renewal.
+* [ ] Routing for sites to better support of SPA.
+* [ ] Better error pages.
+* [ ] Write tests.
+* [ ] Add Swarm API mockups for test purposes.
+* [ ] Custom sites types:
+    * [x] Website.
+    * [ ] SPA.
 
 ## License
 
