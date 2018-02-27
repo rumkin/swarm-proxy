@@ -10,7 +10,10 @@ const dnsBzzResolver = require('./lib/dns');
 const {bzzStructureFetcher, bzzEntryFetcher} = require('./lib/bzz');
 const cacheFactory = require('./lib/cache');
 const statFactory = require('./lib/stat');
+const plantOrigin = require('./lib/plant-origin');
 const Store = require('./lib/store');
+
+const V_2018_BETA = '2018:pre';
 
 process.on('uncaughtException', (error) => {
     console.error(error);
@@ -23,6 +26,7 @@ const DNS = process.env.DNS || '8.8.8.8';
 const BZZ = process.env.BZZ || 'http://swarm-gateways.net';
 const API = process.env.API || null;
 const STAT = process.env.STAT || null;
+const DEV = process.env.NODE_ENV === 'dev';
 
 const getBzzRecord = dnsBzzResolver(DNS.split(/\s*,\s*/));
 const fetchBzzStruct = bzzStructureFetcher(BZZ);
@@ -34,14 +38,34 @@ const stat = STAT ? statFactory(STAT) : null;
 
 const apiRouter = new Plant.Router();
 
+apiRouter.use(plantOrigin());
+
 apiRouter.get('/stat', async ({res}) => {
-    res.json({
-        requests: stat.get('requests'),
-        bytes: stat.get('bytes'),
-    });
+    if (stat) {
+        res.json({
+            requests: stat.get('requests'),
+            bytes: stat.get('bytes'),
+        });
+    }
+    else {
+        res.json({});
+    }
 });
 
-const apiHandler = apiRouter.handler();
+apiRouter.get('/swarm-record', async ({req, res}) => {
+    const host = req.query.host;
+
+    let swarm;
+    if (await dnsCache.has(host)) {
+        swarm = await dnsCache.get(host);
+    }
+    else {
+        swarm = await getBzzRecord(host);
+        await dnsCache.set(host, swarm);
+    }
+
+    res.json(swarm);
+});
 
 const plant = new Plant();
 
@@ -70,55 +94,72 @@ plant.use(async ({req, res}, next) => {
     });
 });
 
-plant.use(async({req, ...ctx}, next) => {
-    if (req.host !== API) {
+plant.or(Plant.and(async({req, ...ctx}, next) => {
+    if (req.host === API) {
         await next();
     }
-    else {
-        await apiHandler({req, ...ctx});
-    }
-});
+}, apiRouter));
+
+if (DEV) {
+    plant.use(async ({req, ...ctx}, next) => {
+        await next({req, ...ctx, host: req.query.__host__});
+    });
+}
+else {
+    plant.use(async ({req, ...ctx}, next) => {
+        await next({req, ...ctx, host: req.host});
+    });
+}
 
 // Extract BZZ-TXT record from DNS
-plant.use(async ({req, ...ctx}, next) => {
-    const {host} = req;
-
+plant.use(async ({req, host, ...ctx}, next) => {
     if (isIp(host) || host === 'localhost') {
         return;
     }
 
-    let bzz;
+    let swarm;
     if (await dnsCache.has(host)) {
-        bzz = await dnsCache.get(host);
+        swarm = await dnsCache.get(host);
     }
     else {
-        bzz = await getBzzRecord(host);
-        await dnsCache.set(host, bzz);
+        swarm = await getBzzRecord(host);
+        await dnsCache.set(host, swarm);
     }
 
-    if (bzz) {
-        await next({req, bzz, ...ctx});
+    if (! swarm) {
+        return;
     }
+
+    if (! swarm.bzz) {
+        // TODO Throw invalid swarm-record error
+        return;
+    }
+
+    await next({req, swarm, ...ctx});
 });
 
 // Get site tree from BZZ
-plant.use(async ({bzz, ...ctx}, next) => {
-    const cached = await bzzCache.get(bzz);
+plant.use(async ({swarm, ...ctx}, next) => {
+    if (swarm.swarm !== V_2018_BETA) {
+        return;
+    }
+
+    const cached = await bzzCache.get(swarm.bzz);
     let files;
 
     if (! cached) {
-        const entries = await fetchBzzStruct(bzz, {
+        const entries = await fetchBzzStruct(swarm.bzz, {
             timeout: 10e3,
         });
 
-        await bzzCache.set(bzz, entries);
+        await bzzCache.set(swarm.bzz, entries);
         files = entries;
     }
     else {
         files = cached;
     }
 
-    await next({files, ...ctx});
+    await next({files, swarm, ...ctx});
 });
 
 if (STAT) { // Write host stat
