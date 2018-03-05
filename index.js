@@ -94,11 +94,11 @@ plant.use(async ({req, res}, next) => {
     });
 });
 
-plant.or(Plant.and(async({req, ...ctx}, next) => {
+plant.use(async({req, ...ctx}, next) => {
     if (req.host === API) {
         await next();
     }
-}, apiRouter));
+}, apiRouter);
 
 if (DEV) {
     plant.use(async ({req, ...ctx}, next) => {
