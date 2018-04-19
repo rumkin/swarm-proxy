@@ -12,7 +12,7 @@ const CMD = process.argv[2] || 'start';
 
 process.on('uncaughtException', onError);
 
-switch(CMD) {
+switch (CMD) {
     case 'start':
         start();
         break;
@@ -45,15 +45,18 @@ function start() {
         }
     }
 
-    const child = spawn(process.argv[0], [path.join(__dirname, '/run.js'), ...process.argv.slice(3)], {
-        env: process.env,
-        stdio: [
-            'ignore',
-            fs.openSync(OUTLOG, 'a'),
-            fs.openSync(ERRLOG, 'a'),
-        ],
-        detached: true,
-    });
+    const child = spawn(process.argv[0],
+        [path.join(__dirname, '/run.js'), ...process.argv.slice(3)],
+        {
+            env: process.env,
+            stdio: [
+                'ignore',
+                fs.openSync(OUTLOG, 'a'),
+                fs.openSync(ERRLOG, 'a'),
+            ],
+            detached: true,
+        },
+    );
 
     child.on('error', onError);
 
@@ -149,7 +152,7 @@ function request(options = {}) {
             const data = [];
 
             res.on('error', reject);
-            res.on('data', (chunk) => data.push(chunk))
+            res.on('data', (chunk) => data.push(chunk));
             res.on('end', () => {
                 try {
                     res.data = JSON.parse(Buffer.concat(data).toString('utf8'));

@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Swarm Sites</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <style id="/rumkin/swarm-sites/style.css">html {
+            	font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+            	font-size: 100%;
+            	padding: 0;
+            }
+
+            body {
+                padding: 0;
+                margin: 0;
+            }
+
+            .container {
+                max-width: 980px;
+                margin: 0 auto;
+                padding: 0 20px;
+            }
+
+            .pageHead {
+                padding: 4em 0;
+            }
+
+            .pageHead-title {
+                    margin: 1em 0 0;
+                    font-size: 3rem;
+                }
+
+            .pageHead-desc {
+                    margin: 0;
+                    opacity: .8;
+                }
+
+            .pageHead-helper {
+                    margin: 2em 0 0;
+                }
+
+            .statGrid {
+                display: grid;
+            }
+
+            .statGrid-item {
+
+                }
+
+            .btn {
+                border: 1px solid #333;
+                padding: 7px;
+                vertical-align: middle;
+                text-decoration: none;
+                color: #000;
+            }
+
+            .btn svg {
+                width: 1rem;
+                height: 1rem;
+                fill: #000;
+                vertical-align: bottom;
+            }
+
+            .alert {
+                padding: 15px;
+                margin-bottom: 20px;
+                border: 1px solid transparent;
+                border-radius: 2px;
+            }
+
+            .alert-warning {
+                    color: #8a6d3b;
+                    background-color: #fcf8e3;
+                    border-color: #faebcc;
+                }
+
+            code {
+                font-family: "Lucida Console", Monaco, monospace;
+                font-size: 90%;
+                background-color: #eee;
+            }
+
+            pre > code {
+                display: block;
+                padding: 7px;
+                overflow: auto;
+                outline: none;
+            }
+
+            .comment {
+                color: #999;
+            }
+        </style>
+
+    </head>
+    <body>
+    <div class="alert alert-warning">
+    Service is in <strong>beta</strong> state.
+</div>
+<div class="container">
+    <header class="pageHead">
+        <div>
+            <h1 class="pageHead-title">
+                Swarm Sites
+            </h1>
+            <summary class="pageHead-desc">
+                DNS to Ethereum's Swarm proxy service.
+            </summary>
+        </div>
+        <section class="pageHead-helper">
+            <p>
+                <a class="btn" href="https://github.com/rumkin/swarm-sites">
+                    <svg id="github" viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.582 0 8c0 3.535 2.292 6.533 5.47 7.59.4.075.547-.172.547-.385 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.17-.89-1.17-.725-.496.056-.486.056-.486.803.056 1.225.824 1.225.824.714 1.223 1.873.87 2.33.665.072-.517.278-.87.507-1.07-1.777-.2-3.644-.888-3.644-3.953 0-.873.31-1.587.823-2.147-.09-.202-.36-1.015.07-2.117 0 0 .67-.215 2.2.82.64-.178 1.32-.266 2-.27.68.004 1.36.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.43 1.102.16 1.915.08 2.117.51.56.82 1.274.82 2.147 0 3.073-1.87 3.75-3.65 3.947.28.24.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8"/>
+                      </svg>
+                    <span>
+                        Github
+                    </span>
+                </a>
+            </p>
+        </section>
+    </header>
+    <main>
+        <p>
+            DNS configuration example (<em>editable</em>):
+        </p>
+        <pre><code contenteditable spellcheck="false"><span class="comment">; Redirect to SwarmSite server</span>
+@ 3600 IN A 159.65.169.224
+<span class="comment">; Specify BZZ hash</span>
+@ IN TXT swarm=2018:pre bzz=a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a type=website
+</code></pre>
+    </main>
+</div>
+    </body>
+</html>

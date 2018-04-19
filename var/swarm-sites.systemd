@@ -10,6 +10,7 @@ Type=forking
 
 Environment=APP=swarm-proxy
 Environment=DIR=/var/www/swarm-proxy
+Environment=API=api.swarmsites.online
 
 Restart=always
 ExecStart=/usr/bin/node /var/apps/swarm-proxy/cli.js start

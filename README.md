@@ -1,7 +1,9 @@
 # Swarm Sites
 
 Swarm sites is an http server for serving swarm websites and SPAs requested via
-regular DNS by non .eth domains. It works like Github Pages but for Swarm.
+regular DNS by non `.eth` domains. It works like Github Pages but for Swarm.
+
+[![Automated by Buddy](https://assets.buddy.works/automated-dark.svg)](https://buddy.works)
 
 **NOTE!** SwarmSite is in beta.
 
