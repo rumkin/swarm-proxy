@@ -1,24 +1,23 @@
-const fs = require('fs');
+// const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const mime = require('mime');
 const Plant = require('@plant/plant');
 const accept = require('accept');
 const isIp = require('is-ip');
+const Sql = require('sequelize');
+const dayjs = require('dayjs');
 
 const dnsBzzResolver = require('./lib/dns');
 const {bzzStructureFetcher, bzzEntryFetcher} = require('./lib/bzz');
 const cacheFactory = require('./lib/cache');
-const statFactory = require('./lib/stat');
+// const statFactory = require('./lib/stat');
 const plantOrigin = require('./lib/plant-origin');
 const Store = require('./lib/store');
 
 const V_2018_BETA = '2018:pre';
 
-process.on('uncaughtException', (error) => {
-    console.error(error);
-    process.exit(1);
-});
+process.on('uncaughtException', onError);
 
 const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || '8080';
@@ -26,7 +25,8 @@ const DNS = process.env.DNS || '8.8.8.8';
 const BZZ = process.env.BZZ || 'http://swarm-gateways.net';
 const API = process.env.API || null;
 const STAT = process.env.STAT || null;
-const DEV = process.env.NODE_ENV === 'dev';
+const DEV = process.env.DEV === '1';
+const DB = process.env.DB || 'db.sqlite';
 
 const getBzzRecord = dnsBzzResolver(DNS.split(/\s*,\s*/));
 const fetchBzzStruct = bzzStructureFetcher(BZZ);
@@ -34,22 +34,57 @@ const fetchBzzEntry = bzzEntryFetcher(BZZ);
 const store = new Store.Fs({dir: '/tmp/swarm-proxy'});
 const bzzCache = cacheFactory(store);
 const dnsCache = cacheFactory(new Store.Memory({lifetime: 15e3}));
-const stat = STAT ? statFactory(STAT) : null;
+// const stat = STAT ? statFactory(STAT) : null;
+const sql = new Sql({
+    dialect: 'sqlite',
+    storage: DB,
+    operatorsAliases: false,
+});
+
+const Stat = sql.define('stat', {
+    host: {
+        type: Sql.STRING,
+        isNull: false,
+    },
+    time: {
+        type: Sql.INTEGER,
+        defaultValue: 0,
+        isNull: false,
+    },
+    hits: {
+        type: Sql.INTEGER,
+        defaultValue: 0,
+        isNull: false,
+    },
+    bytes: {
+        type: Sql.INTEGER,
+        defaultValue: 0,
+        isNull: false,
+    },
+});
 
 const apiRouter = new Plant.Router();
 
 apiRouter.use(plantOrigin());
 
 apiRouter.get('/stat', async ({res}) => {
-    if (stat) {
-        res.json({
-            requests: stat.get('requests'),
-            bytes: stat.get('bytes'),
-        });
-    }
-    else {
-        res.json({});
-    }
+    const lastDay = dayjs().startOf('hour').subtract(24, 'hours').unix();
+
+    const statistics = await Stat.findAll({
+        where: {
+            time: {
+                [Sql.Op.gte]: lastDay,
+            },
+        },
+        attributes: [
+            'host',
+            [sql.fn('SUM', sql.col('hits')), 'hits'],
+            [sql.fn('SUM', sql.col('bytes')), 'bytes'],
+        ],
+        group: ['host'],
+    });
+
+    res.json({statistics});
 });
 
 apiRouter.get('/swarm-record', async ({req, res}) => {
@@ -94,7 +129,7 @@ plant.use(async ({req, res}, next) => {
     });
 });
 
-plant.use(async({req, ...ctx}, next) => {
+plant.use(async({req}, next) => {
     if (req.host === API) {
         await next();
     }
@@ -135,7 +170,7 @@ plant.use(async ({req, host, ...ctx}, next) => {
         return;
     }
 
-    await next({req, swarm, ...ctx});
+    await next({req, host, swarm, ...ctx});
 });
 
 // Get site tree from BZZ
@@ -163,12 +198,32 @@ plant.use(async ({swarm, ...ctx}, next) => {
 });
 
 if (STAT) { // Write host stat
-    plant.use(async ({res}, next) => {
+    plant.use(async ({res, host}, next) => {
         await next();
 
         if (res.headersSent && res.statusCode === 200) {
-            stat.add('requests', 1);
-            stat.add('bytes', parseInt(res.headers.get('content-length'), 10));
+            const time = dayjs().startOf('hour').unix();
+
+            const counter = await Stat.findOne({
+                where: {host, time},
+            });
+
+            const bytes = parseInt(res.headers.get('content-length'), 10);
+
+            if (counter) {
+                await counter.updateAttributes({
+                    hits: sql.literal('`hits` + 1'),
+                    bytes: sql.literal('`bytes` + ' + bytes),
+                });
+            }
+            else {
+                await Stat.create({
+                    host,
+                    time,
+                    hits: 1,
+                    bytes,
+                });
+            }
         }
     });
 }
@@ -198,9 +253,13 @@ plant.use(async ({req, res, swarm, files}) => {
 
 const server = http.createServer(plant.handler());
 
-server.listen(PORT, HOST, () => {
-    console.log('Server started at %s: %s', HOST, PORT);
-});
+sql.sync()
+.then(() => {
+    server.listen(PORT, HOST, () => {
+        console.log('Server started at %s: %s', HOST, PORT);
+    });
+})
+.catch(onError);
 
 // Helper methods
 
@@ -257,4 +316,9 @@ async function sendFile(res, file) {
     res.headers.set('content-length', file.size);
     res.headers.set('x-bzz-hash', `keccak-256 ${file.hash}`);
     res.send(content);
+}
+
+function onError(error) {
+    console.error(error);
+    process.exit(1);
 }

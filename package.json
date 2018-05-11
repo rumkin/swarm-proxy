@@ -4,10 +4,13 @@
     "accept": "^3.0.2",
     "axios": "^0.17.1",
     "bluebird": "^3.5.1",
+    "dayjs": "^1.5.24",
     "error3": "^1.6.0",
     "is-ip": "^2.0.0",
     "is-running": "^2.1.0",
-    "mime": "^2.2.0"
+    "mime": "^2.2.0",
+    "sequelize": "^4.37.7",
+    "sqlite3": "^4.0.0"
   },
   "devDependencies": {},
   "scripts": {}
