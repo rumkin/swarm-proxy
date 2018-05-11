@@ -30,7 +30,7 @@ function stop(signal) {
 
     timeout = setTimeout(() => {
         process.exit();
-    }, 1000);
+    }, DELAY);
 }
 
 function exit(signal) {
@@ -40,7 +40,8 @@ function exit(signal) {
 
     if (subproc) {
         stop(signal);
-    } else {
+    }
+    else {
         process.exit();
     }
 }
@@ -119,7 +120,7 @@ if (fs.existsSync(SOCKFILE)) {
 
 server.listen(SOCKFILE, () => {
     console.log('Server is listening: %s', path.resolve(SOCKFILE));
-    fs.chmodSync(SOCKFILE, 0770);
+    fs.chmodSync(SOCKFILE, 0o0770);
 });
 
 fs.writeFileSync(PIDFILE, process.pid);
