@@ -11,7 +11,6 @@ const dayjs = require('dayjs');
 const dnsBzzResolver = require('./lib/dns');
 const {bzzStructureFetcher, bzzEntryFetcher} = require('./lib/bzz');
 const cacheFactory = require('./lib/cache');
-// const statFactory = require('./lib/stat');
 const plantOrigin = require('./lib/plant-origin');
 const Store = require('./lib/store');
 
@@ -34,7 +33,6 @@ const fetchBzzEntry = bzzEntryFetcher(BZZ);
 const store = new Store.Fs({dir: '/tmp/swarm-proxy'});
 const bzzCache = cacheFactory(store);
 const dnsCache = cacheFactory(new Store.Memory({lifetime: 15e3}));
-// const stat = STAT ? statFactory(STAT) : null;
 const sql = new Sql({
     dialect: 'sqlite',
     storage: DB,
